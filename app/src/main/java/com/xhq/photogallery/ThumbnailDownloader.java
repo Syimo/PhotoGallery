@@ -67,9 +67,13 @@ public class ThumbnailDownloader<T> extends HandlerThread {
         mResponseHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mHasQuit || !(mRequestMap.get(target).equals(url)))
+                if (mHasQuit || !(mRequestMap.get(target).equals(url))) {
                     return;
-                mRequestMap.remove(target);
+                }
+
+                //该句代码会导致mRequestMap.get(target)空指针异常。假设viewholder223在主线程在执行移除前。在迅速的快速滑动中，
+                //子线程viewholder223被回收利用，存在于消息队列，而后面又没有被重新复用，存在这种时刻导致空指针异常
+//                mRequestMap.remove(target);
                 mThumbnailDownloadListener.onThumbnailDownloaded(target, bitmap);
             }
         });
