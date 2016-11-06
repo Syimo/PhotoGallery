@@ -43,13 +43,7 @@ public class PhotoGalleryFragment extends Fragment {
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
     private ProgressDialog mProgressDialog;
     private int currentPage = 1;
-    private int layoutCloumn = 3;
     private int currentPosition = 0;
-    private LruCache<PhotoHolder, Bitmap> mMemoryCache;//声明缓存空间
-    final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);//获取应用在系统中的最大内存分配
-    //分配1/8的应用内存作为缓存空间
-    final int cacheSize = maxMemory / 8;
-    int holderPosition;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -59,35 +53,12 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        mMemoryCache = new LruCache<PhotoHolder, Bitmap>(cacheSize) {
-
-            @Override
-            protected int sizeOf(PhotoHolder key, Bitmap value) {
-                int size = value.getByteCount() / 1024;
-                //  Log.d(TAG, "cacheSize: " + cacheSize + "--single : " + size);
-                return size;
-            }
-        };
-
         new FetchItemsTask().execute(currentPage++);
-        Handler responseHandler = new Handler()/*{
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                if(msg.what == 2){
-                    Log.d(TAG,"hello main~~");
-                }
-            }
-        }*/;
+        Handler responseHandler = new Handler();
         mThumbnailDownloader = new ThumbnailDownloader<>(responseHandler);
         mThumbnailDownloader.setThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
-
             @Override
             public void onThumbnailDownloaded(PhotoHolder target, Bitmap thumbnail) {
-                if (target == null || thumbnail == null)
-                    return;
-              //  Log.d(TAG, "holder pos: " + holderPosition);
-                mMemoryCache.put(target, thumbnail);
                 Drawable drawable = new BitmapDrawable(getResources(), thumbnail);
                 target.bindDrawable(drawable);
             }
@@ -106,12 +77,11 @@ public class PhotoGalleryFragment extends Fragment {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 if (!recyclerView.canScrollVertically(1)) {
-                    if (currentPage > 10)
+                    if (currentPage > 10) {
+                        Toast.makeText(getActivity(), "已经到最后了", Toast.LENGTH_SHORT).show();
                         return;
-
+                    }
                     GridLayoutManager manager = (GridLayoutManager) recyclerView.getLayoutManager();
-
-// Declare lastPosition as an int global variable first.
                     currentPosition = manager.findLastVisibleItemPosition();
                     new FetchItemsTask().execute(currentPage++);
                 }
@@ -134,36 +104,26 @@ public class PhotoGalleryFragment extends Fragment {
 
     private void setupAdapter(int currentPosition) {
         if (isAdded()) {
-            if (mPhotoRecyclerView.getAdapter() == null)
+            if (mPhotoRecyclerView.getAdapter() == null) {
                 mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
 
-//            Log.d(TAG, "positon:" + currentPosition);
-            else {
+            } else {
                 mPhotoRecyclerView.scrollToPosition(currentPosition);
-                //mPhotoRecyclerView.getAdapter().notifyDataSetChanged();
+
             }
         }
     }
 
     private class PhotoHolder extends RecyclerView.ViewHolder {
         private ImageView mImageView;
-        private TextView mTextView;
-
 
         public PhotoHolder(View itemView) {
             super(itemView);
-//            mTextView = (TextView) itemView;
             mImageView = (ImageView) itemView.findViewById(R.id.fragment_gallery_item_iamge_view);
         }
 
         public void bindDrawable(Drawable drawable) {
             mImageView.setImageDrawable(drawable);
-        }
-
-        public void bindDrawable(int position) {
-
-            mTextView.setText(position + "");
-            mTextView.setTextSize(20);
         }
     }
 
@@ -177,30 +137,15 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         public PhotoHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(getActivity()).inflate(R.layout.gallery_item, parent, false);
-//            TextView view = new TextView(getActivity());
             return new PhotoHolder(view);
         }
 
         @Override
         public void onBindViewHolder(PhotoHolder holder, int position) {
-
             GalleryItem item = mItems.get(position);
-
-            Drawable drawable = getResources().getDrawable(R.drawable.bill_up_close);
+            Drawable drawable = getResources().getDrawable(R.drawable.ic_launcher);
             holder.bindDrawable(drawable);
-            Bitmap bitmap = mMemoryCache.get(holder);
-            if (bitmap != null) {
-                Drawable drawable1 = new BitmapDrawable(bitmap);
-                holder.bindDrawable(drawable1);
-            } else {
-
-                mThumbnailDownloader.queneThumbnail(holder, item.getUrl_s());
-            }
-//            Log.d(TAG, "pos： " + position);
-
-
-//            holder.bindDrawable(position);
-
+            mThumbnailDownloader.queneThumbnail(holder, item.getUrl_s());
 
         }
 
@@ -211,7 +156,6 @@ public class PhotoGalleryFragment extends Fragment {
     }
 
     private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
-
 
         @Override
         protected void onPreExecute() {
@@ -232,12 +176,6 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mThumbnailDownloader.quit();
-    }
-
     private void showProgress() {
         if (mProgressDialog == null) {
             mProgressDialog = new ProgressDialog(getActivity());
@@ -247,7 +185,6 @@ public class PhotoGalleryFragment extends Fragment {
         } else {
             mProgressDialog.show();
         }
-
     }
 
     private void closeProgress() {
@@ -262,4 +199,9 @@ public class PhotoGalleryFragment extends Fragment {
         closeProgress();
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mThumbnailDownloader.quit();
+    }
 }

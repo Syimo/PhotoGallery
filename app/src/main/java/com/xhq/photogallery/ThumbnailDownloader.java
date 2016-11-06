@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.IOException;
@@ -55,8 +56,6 @@ public class ThumbnailDownloader<T> extends HandlerThread {
 
     private void handleRequest(final T target) {
         final String url = mRequestMap.get(target);
-        if (url == null)
-            return;
         byte[] bitmapBytes = new byte[0];
         try {
             bitmapBytes = new FlickrFetchr().getUrlBytes(url);
@@ -68,15 +67,21 @@ public class ThumbnailDownloader<T> extends HandlerThread {
         mResponseHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mHasQuit || !(url.equals(mRequestMap.get(target))))
+                if (mHasQuit || !(mRequestMap.get(target).equals(url)))
                     return;
                 mRequestMap.remove(target);
                 mThumbnailDownloadListener.onThumbnailDownloaded(target, bitmap);
             }
         });
-//        mResponseHandler.obtainMessage(2).sendToTarget();
 
     }
+
+    public void queneThumbnail(T target, String url) {
+        mRequestMap.put(target, url);
+        mRequestHandler.obtainMessage(MESSAGE_DOWNLOAD, target).sendToTarget();
+
+    }
+
 
     public void clearQuene() {
         mRequestHandler.removeMessages(MESSAGE_DOWNLOAD);
@@ -86,15 +91,6 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     public boolean quit() {
         mHasQuit = true;
         return super.quit();
-    }
-
-    public void queneThumbnail(T target, String url) {
-        if (url != null) {
-            mRequestMap.put(target, url);
-            mRequestHandler.obtainMessage(MESSAGE_DOWNLOAD, target).sendToTarget();
-        }
-
-
     }
 
 }

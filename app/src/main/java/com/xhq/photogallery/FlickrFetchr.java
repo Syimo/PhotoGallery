@@ -1,6 +1,7 @@
 package com.xhq.photogallery;
 
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -67,13 +68,21 @@ public class FlickrFetchr {
                     .build()
                     .toString();
             String jsonString = getUrlString(url);
-            listItems = parseItemsWithGson(jsonString);
+//            listItems = parseItemsWithGson(jsonString);
+            listItems = parseItems(jsonString);
         } catch (IOException | JSONException e) {
             Log.e(TAG, e.getMessage() + "获取json失败");
         }
         return listItems;
     }
 
+    /***
+     * 还存在问题。当url_s字段不存在时，会给item对象存入null，应该在此作判断
+     *
+     * @param jsonBody
+     * @return
+     * @throws JSONException
+     */
     private List<GalleryItem> parseItemsWithGson(String jsonBody) throws JSONException {
         JSONObject object = new JSONObject(jsonBody);
         JSONObject photo = object.getJSONObject("photos");
@@ -81,5 +90,23 @@ public class FlickrFetchr {
         Gson gson = new Gson();
         return gson.fromJson(items.toString(), new TypeToken<List<GalleryItem>>() {
         }.getType());
+    }
+
+    private List<GalleryItem> parseItems(String jsonBody) throws JSONException {
+        List<GalleryItem> list = new ArrayList<>();
+        JSONObject object = new JSONObject(jsonBody);
+        JSONObject photo = object.getJSONObject("photos");
+        JSONArray items = photo.getJSONArray("photo");
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject item = items.getJSONObject(i);
+            if (!item.has("url_s"))
+                continue;
+            GalleryItem galleryItem = new GalleryItem();
+            galleryItem.setId(item.getString("id"));
+            galleryItem.setTitle(item.getString("title"));
+            galleryItem.setUrl_s(item.getString("url_s"));
+            list.add(galleryItem);
+        }
+        return list;
     }
 }
