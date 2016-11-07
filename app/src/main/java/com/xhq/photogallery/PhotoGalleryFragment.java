@@ -146,6 +146,7 @@ public class PhotoGalleryFragment extends Fragment {
             Drawable drawable = getResources().getDrawable(R.drawable.ic_launcher);
             holder.bindDrawable(drawable);
             mThumbnailDownloader.queneThumbnail(holder, item.getUrl_s());
+            Log.d(TAG, holder.toString());
 
         }
 
