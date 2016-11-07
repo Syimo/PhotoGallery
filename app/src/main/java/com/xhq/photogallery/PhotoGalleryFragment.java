@@ -109,7 +109,6 @@ public class PhotoGalleryFragment extends Fragment {
 
             } else {
                 mPhotoRecyclerView.scrollToPosition(currentPosition);
-
             }
         }
     }
@@ -128,7 +127,7 @@ public class PhotoGalleryFragment extends Fragment {
     }
 
     private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder> {
-        private List<GalleryItem> mItems;
+        //private List<GalleryItem> mItems;
 
         public PhotoAdapter(List<GalleryItem> list) {
             mItems = list;
@@ -146,7 +145,8 @@ public class PhotoGalleryFragment extends Fragment {
             Drawable drawable = getResources().getDrawable(R.drawable.ic_launcher);
             holder.bindDrawable(drawable);
             mThumbnailDownloader.queneThumbnail(holder, item.getUrl_s());
-            Log.d(TAG, holder.toString());
+            mThumbnailDownloader.preCacheDownload(mItems, position);
+
 
         }
 

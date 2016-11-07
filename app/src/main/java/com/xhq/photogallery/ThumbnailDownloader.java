@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -22,6 +23,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     private static final String TAG = "ThumbnailDownloader";
     private Boolean mHasQuit = false;
     private static final int MESSAGE_DOWNLOAD = 0;
+    private static final int MESSAGE_PRE_DOWNLOAD = 1;
     private Handler mRequestHandler;
     private Handler mResponseHandler;
     private ConcurrentMap<T, String> mRequestMap = new ConcurrentHashMap<>();
@@ -29,10 +31,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     private LruCache<String, Bitmap> mLruCache;
     private final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
     private final int cacheSize = maxMemory / 8;
-
-    int i = 0;
-    Object obj = new Object();
-
+    private Handler mPreDownloadHandler;
 
     public interface ThumbnailDownloadListener<T> {
         void onThumbnailDownloaded(T target, Bitmap thumbnail);
@@ -44,15 +43,11 @@ public class ThumbnailDownloader<T> extends HandlerThread {
 
     public ThumbnailDownloader(Handler handler) {
         super(TAG);
-
         mResponseHandler = handler;
         mLruCache = new LruCache<String, Bitmap>(cacheSize) {
             @Override
             protected int sizeOf(String key, Bitmap bitmap) {
-
-                int temp = bitmap.getByteCount() / 1024;
-
-                return temp;
+                return bitmap.getByteCount() / 1024;
             }
         };
     }
@@ -65,6 +60,24 @@ public class ThumbnailDownloader<T> extends HandlerThread {
                 if (msg.what == MESSAGE_DOWNLOAD) {
                     T target = (T) msg.obj;
                     handleRequest(target);
+                }
+            }
+        };
+
+        mPreDownloadHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                if (msg.what == MESSAGE_PRE_DOWNLOAD) {
+                    String url = (String) msg.obj;
+                    try {
+                        if (mLruCache.get(url) != null)
+                            return;
+                        byte[] bitmapBytes = new FlickrFetchr().getUrlBytes(url);
+                        Bitmap mBitmap = BitmapFactory.decodeByteArray(bitmapBytes, 0, bitmapBytes.length);
+                        mLruCache.put(url, mBitmap);
+                    } catch (IOException e) {
+                        Log.d(TAG, e.getMessage());
+                    }
                 }
             }
         };
@@ -100,33 +113,29 @@ public class ThumbnailDownloader<T> extends HandlerThread {
 
     }
 
-    public void queneThumbnail(final T target, String url) {
-        // Log.d(TAG, target + "");
-
+    public void queneThumbnail(final T target, final String url) {
         mRequestMap.put(target, url);
         final Bitmap mBitmap = mLruCache.get(url);
-        Log.d(TAG, "sub thread : " + target.toString());
         if (mBitmap != null) {
-            // Log.d(TAG, "req : " + (i++));
-
             mResponseHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d(TAG, "main thread : " + target.toString());
                     mThumbnailDownloadListener.onThumbnailDownloaded(target, mBitmap);
                 }
             });
 
-        } else
-
-        {
-            //Log.d(TAG,"send !!");
+        } else {
             mRequestHandler.obtainMessage(MESSAGE_DOWNLOAD, target).sendToTarget();
         }
-
-
     }
 
+    public void preCacheDownload(List<GalleryItem> list, int currentPosition) {
+        int start = Math.max(0, currentPosition - 10);
+        int end = Math.min(list.size() - 1, currentPosition + 10);
+        for (int i = start; i <= end; i++) {
+            mPreDownloadHandler.obtainMessage(MESSAGE_PRE_DOWNLOAD, list.get(i).getUrl_s());
+        }
+    }
 
     public void clearQuene() {
         mRequestHandler.removeMessages(MESSAGE_DOWNLOAD);
@@ -137,5 +146,6 @@ public class ThumbnailDownloader<T> extends HandlerThread {
         mHasQuit = true;
         return super.quit();
     }
+
 
 }
