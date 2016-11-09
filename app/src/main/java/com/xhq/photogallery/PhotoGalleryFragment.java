@@ -49,6 +49,7 @@ public class PhotoGalleryFragment extends Fragment {
     private ProgressDialog mProgressDialog;
     private int currentPage = 1;
     private int currentPosition = 0;
+    private boolean isLoaded;
 
 
     public static PhotoGalleryFragment newInstance() {
@@ -84,13 +85,17 @@ public class PhotoGalleryFragment extends Fragment {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 if (!recyclerView.canScrollVertically(1)) {
+
                     if (currentPage > 10) {
                         Toast.makeText(getActivity(), "已经到最后了", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    currentPosition = mItems.size();
-                    String query = QueryPreferences.getStoredQuery(getActivity());
-                    new FetchItemsTask(query).execute(currentPage++);
+                    if (isLoaded) {
+                        isLoaded = false;
+                        String query = QueryPreferences.getStoredQuery(getActivity());
+                        new FetchItemsTask(query).execute(currentPage++);
+                    }
+
                 }
             }
         });
@@ -164,37 +169,6 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
 
-    private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
-        private String mQuery;
-
-        FetchItemsTask(String query) {
-            mQuery = query;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            showProgress();
-        }
-
-        @Override
-        protected List<GalleryItem> doInBackground(Integer... params) {
-
-            if (mQuery == null) {
-                return new FlickrFetchr().fetchRecentPhotos(params[0]);
-            } else {
-                return new FlickrFetchr().searchPhotos(mQuery, params[0]);
-            }
-        }
-
-        @Override
-        protected void onPostExecute(List<GalleryItem> galleryItems) {
-
-            mItems.addAll(currentPosition, galleryItems);
-            setupAdapter(currentPosition);
-            closeProgress();
-        }
-    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -206,7 +180,7 @@ public class PhotoGalleryFragment extends Fragment {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 currentPosition = 0;
-                currentPage = 0;
+                currentPage = 1;
                 QueryPreferences.setStoredQuery(getActivity(), query);
                 new FetchItemsTask(query).execute(currentPage++);
 
@@ -214,6 +188,7 @@ public class PhotoGalleryFragment extends Fragment {
                 mPhotoRecyclerView.getAdapter().notifyDataSetChanged();
                 searchView.clearFocus();
                 menuItem.collapseActionView();
+                Log.d(TAG, currentPage + "--" + currentPosition);
                 return true;
             }
 
@@ -243,6 +218,41 @@ public class PhotoGalleryFragment extends Fragment {
 
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
+        private String mQuery;
+
+        FetchItemsTask(String query) {
+            mQuery = query;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showProgress();
+        }
+
+        @Override
+        protected List<GalleryItem> doInBackground(Integer... params) {
+
+            if (mQuery == null) {
+                return new FlickrFetchr().fetchRecentPhotos(params[0]);
+            } else {
+                return new FlickrFetchr().searchPhotos(mQuery, params[0]);
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<GalleryItem> galleryItems) {
+
+            currentPosition = mItems.size();
+            Log.d(TAG, galleryItems.size() + "------" + (currentPage-1) + "--" + currentPosition);
+            mItems.addAll(currentPosition, galleryItems);
+            setupAdapter(currentPosition);
+            closeProgress();
+            isLoaded = true;
         }
     }
 
