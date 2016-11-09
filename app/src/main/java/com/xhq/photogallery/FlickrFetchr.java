@@ -1,6 +1,7 @@
 package com.xhq.photogallery;
 
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -26,6 +27,16 @@ import java.util.List;
 public class FlickrFetchr {
     private static final String TAG = "FlickrFetchr";
     private static final String API_KEY = "47d7327a15ddcbb5f85a040740d411c7";
+    private static final String FETCH_RECENT_PHOTOS = "flickr.photos.getRecent";
+    private static final String SEARCH_PHOTOS = "flickr.photos.search";
+    private static final Uri ENDPOINT = Uri.parse("https://api.flickr.com/services/rest/")
+            .buildUpon()
+            .appendQueryParameter("api_key", API_KEY)
+            .appendQueryParameter("extras", "url_s")
+            .appendQueryParameter("format", "json")
+            .appendQueryParameter("nojsoncallback", "1")
+            .build();
+
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
 
@@ -54,21 +65,20 @@ public class FlickrFetchr {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<GalleryItem> fetchItems(int page) {
+    public List<GalleryItem> fetchRecentPhotos(Integer page) {
+        String url = buildUrl(FETCH_RECENT_PHOTOS, null, page);
+        return downloadGalleryItems(url, page);
+    }
+
+    public List<GalleryItem> searchPhotos(String query, @Nullable Integer page) {
+        String url = buildUrl(SEARCH_PHOTOS, query, page);
+        return downloadGalleryItems(url, page);
+    }
+
+    private List<GalleryItem> downloadGalleryItems(String url, @Nullable Integer page) {
         List<GalleryItem> listItems = new ArrayList<>();
         try {
-            String url = Uri.parse("https://api.flickr.com/services/rest/")
-                    .buildUpon()
-                    .appendQueryParameter("page", page + "")
-                    .appendQueryParameter("method", "flickr.photos.getRecent")
-                    .appendQueryParameter("api_key", API_KEY)
-                    .appendQueryParameter("extras", "url_s")
-                    .appendQueryParameter("format", "json")
-                    .appendQueryParameter("nojsoncallback", "1")
-                    .build()
-                    .toString();
             String jsonString = getUrlString(url);
-//            listItems = parseItemsWithGson(jsonString);
             listItems = parseItems(jsonString);
         } catch (IOException | JSONException e) {
             Log.e(TAG, e.getMessage() + "获取json失败");
@@ -76,20 +86,16 @@ public class FlickrFetchr {
         return listItems;
     }
 
-    /***
-     * 还存在问题。当url_s字段不存在时，会给item对象存入null，应该在此作判断
-     *
-     * @param jsonBody
-     * @return
-     * @throws JSONException
-     */
-    private List<GalleryItem> parseItemsWithGson(String jsonBody) throws JSONException {
-        JSONObject object = new JSONObject(jsonBody);
-        JSONObject photo = object.getJSONObject("photos");
-        JSONArray items = photo.getJSONArray("photo");
-        Gson gson = new Gson();
-        return gson.fromJson(items.toString(), new TypeToken<List<GalleryItem>>() {
-        }.getType());
+    private String buildUrl(String method, @Nullable String query, @Nullable Integer page) {
+        Uri.Builder builder = ENDPOINT.buildUpon()
+                .appendQueryParameter("method", method);
+        if (page != null) {
+            builder.appendQueryParameter("page", page.toString());
+        }
+        if (method.equals(SEARCH_PHOTOS) && query != null) {
+            builder.appendQueryParameter("text", query);
+        }
+        return builder.build().toString();
     }
 
     private List<GalleryItem> parseItems(String jsonBody) throws JSONException {
@@ -108,5 +114,21 @@ public class FlickrFetchr {
             list.add(galleryItem);
         }
         return list;
+    }
+
+    /***
+     * 还存在问题。当url_s字段不存在时，会给item对象存入null，应该在此作判断
+     *
+     * @param jsonBody
+     * @return
+     * @throws JSONException
+     */
+    private List<GalleryItem> parseItemsWithGson(String jsonBody) throws JSONException {
+        JSONObject object = new JSONObject(jsonBody);
+        JSONObject photo = object.getJSONObject("photos");
+        JSONArray items = photo.getJSONArray("photo");
+        Gson gson = new Gson();
+        return gson.fromJson(items.toString(), new TypeToken<List<GalleryItem>>() {
+        }.getType());
     }
 }
