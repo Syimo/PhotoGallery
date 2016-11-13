@@ -1,11 +1,13 @@
 package com.xhq.photogallery;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.nfc.Tag;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -207,6 +209,17 @@ public class PhotoGalleryFragment extends Fragment {
             }
         });
 
+        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle);
+        boolean isOn;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            isOn = PollJobService.hasScheduled(getActivity());
+        } else {
+            isOn = PollService.isAlarmOn(getActivity());
+        }
+        if (isOn)
+            toggleItem.setTitle(R.string.stop_polling);
+        else
+            toggleItem.setTitle(R.string.start_polling);
     }
 
     @Override
@@ -214,6 +227,18 @@ public class PhotoGalleryFragment extends Fragment {
         switch (item.getItemId()) {
             case R.id.menu_item_clear:
                 QueryPreferences.setStoredQuery(getActivity(), null);
+                return true;
+            case R.id.menu_item_toggle:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    boolean hasScheduled = !PollJobService.hasScheduled(getActivity());
+                    PollJobService.setJobSchedule(getActivity(), hasScheduled);
+
+                } else {
+                    boolean shouldStartAlarm = !PollService.isAlarmOn(getActivity());
+                    PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+
+                }
+                getActivity().invalidateOptionsMenu();
                 return true;
 
             default:
@@ -248,7 +273,6 @@ public class PhotoGalleryFragment extends Fragment {
         protected void onPostExecute(List<GalleryItem> galleryItems) {
 
             currentPosition = mItems.size();
-            Log.d(TAG, galleryItems.size() + "------" + (currentPage-1) + "--" + currentPosition);
             mItems.addAll(currentPosition, galleryItems);
             setupAdapter(currentPosition);
             closeProgress();

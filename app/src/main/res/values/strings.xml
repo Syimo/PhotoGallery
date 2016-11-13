@@ -2,4 +2,9 @@
     <string name="app_name">PhotoGallery</string>
     <string name="search">Search</string>
     <string name="clear_search">Clear Search</string>
+    <string name="start_polling">Start polling</string>
+    <string name="stop_polling">Stop polling</string>
+    <string name="new_pictures_title">New Photos!</string>
+    <string name="new_pictures_title_job">New Photos JobService!</string>
+    <string name="new_pictures_text">you have new pictures in PhotoGallery.</string>
 </resources>
