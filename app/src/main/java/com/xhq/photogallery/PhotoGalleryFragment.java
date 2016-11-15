@@ -43,7 +43,7 @@ import java.util.List;
  * Created by xhq on 2016/11/1.
  */
 
-public class PhotoGalleryFragment extends Fragment {
+public class PhotoGalleryFragment extends VisibleFragment {
     private RecyclerView mPhotoRecyclerView;
     private static final String TAG = "PhotoGalleryFrgamen";
     private List<GalleryItem> mItems = new ArrayList<>();

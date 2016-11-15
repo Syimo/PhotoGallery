@@ -1,6 +1,7 @@
 package com.xhq.photogallery;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.job.JobInfo;
@@ -28,6 +29,11 @@ public class PollJobService extends JobService {
     private static final String TAG = "PollJobService";
     private PollTask mPollTask;
     private static final int JOB_ID = 1;
+    public static final String ACTION_SHOW_NOTIFICATION = "com.xhq.photogallery.SHOW_NOTIFICATION";
+    public static final String PERM_PRIVATE = "com.xhq.photogallery.PRIVATE";
+
+    public static String REQUEST_CODE = "REQUEST_CODE";
+    public static String NOTIFICATION = "NOTIFICATION";
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -84,12 +90,18 @@ public class PollJobService extends JobService {
                         .setContentIntent(pi)
                         .setAutoCancel(true)
                         .build();
-                NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
-                notificationManagerCompat.notify(0, notification);
-
+                showBackgroundNotification(0, notification);
 
             }
             QueryPreferences.setPrefLastId(getApplicationContext(), newId);
+        }
+
+        private void showBackgroundNotification(int requestCode, Notification notification) {
+
+            Intent intent = new Intent(ACTION_SHOW_NOTIFICATION);
+            intent.putExtra(REQUEST_CODE, requestCode);
+            intent.putExtra(NOTIFICATION, notification);
+            sendOrderedBroadcast(intent, PERM_PRIVATE, null, null, Activity.RESULT_OK, null, null);
         }
     }
 
@@ -116,6 +128,7 @@ public class PollJobService extends JobService {
         } else {
             cancelJob(context);
         }
+        QueryPreferences.setAlarmOn(context, isSet);
 
 
     }

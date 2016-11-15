@@ -1,5 +1,6 @@
 package com.xhq.photogallery;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
@@ -22,6 +23,7 @@ import java.util.List;
 public class PollService extends IntentService {
     private static final String TAG = "PollService";
     private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
+
 
     public PollService() {
         super(TAG);
@@ -62,8 +64,7 @@ public class PollService extends IntentService {
                     .setContentIntent(pi)
                     .setAutoCancel(true)
                     .build();
-            NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
-            notificationManagerCompat.notify(0, notification);
+            showBackgroundNotification(0, notification);
 
 
         }
@@ -82,6 +83,7 @@ public class PollService extends IntentService {
             alarmManager.cancel(pi);
             pi.cancel();
         }
+        QueryPreferences.setAlarmOn(context, isOn);
     }
 
     private boolean isNetworkAvailableAndConnected() {
@@ -95,5 +97,13 @@ public class PollService extends IntentService {
         Intent i = PollService.newIntent(context);
         PendingIntent pi = PendingIntent.getService(context, 0, i, PendingIntent.FLAG_NO_CREATE);
         return pi != null;
+    }
+
+    private void showBackgroundNotification(int requestCode, Notification notification) {
+
+        Intent intent = new Intent(PollJobService.ACTION_SHOW_NOTIFICATION);
+        intent.putExtra(PollJobService.REQUEST_CODE, requestCode);
+        intent.putExtra(PollJobService.NOTIFICATION, notification);
+        sendOrderedBroadcast(intent, PollJobService.PERM_PRIVATE, null, null, Activity.RESULT_OK, null, null);
     }
 }
