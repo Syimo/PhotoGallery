@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.app.Fragment;
 import android.text.InputFilter;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -16,6 +17,7 @@ import android.widget.Toast;
 public abstract class VisibleFragment extends Fragment {
 
     private MyBroadcastReceiver myBroadcastReceiver;
+    private static final String TAG="VisibleFragment";
 
     @Override
     public void onStart() {
@@ -37,6 +39,7 @@ public abstract class VisibleFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             setResultCode(Activity.RESULT_CANCELED);
+
         }
     }
 

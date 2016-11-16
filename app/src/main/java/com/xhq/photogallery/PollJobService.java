@@ -120,7 +120,7 @@ public class PollJobService extends JobService {
         if (isSet) {
             JobScheduler js = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
             JobInfo jobInfo = new JobInfo.Builder(JOB_ID, new ComponentName(context, PollJobService.class))
-                    .setPeriodic(1000 * 60 * 15)
+                    .setPeriodic(1000 * 60)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                     .setPersisted(true)
                     .build();
