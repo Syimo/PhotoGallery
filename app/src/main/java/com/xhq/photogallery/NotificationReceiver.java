@@ -27,9 +27,9 @@ public class NotificationReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
- /*       if (getResultCode() != Activity.RESULT_OK) {
+        if (getResultCode() != Activity.RESULT_OK) {
             return;
-        }*/
+        }
         int requestCode = intent.getIntExtra(PollJobService.REQUEST_CODE, 0);
         Notification notification = (Notification) intent.getParcelableExtra(PollJobService.NOTIFICATION);
 
@@ -41,7 +41,7 @@ public class NotificationReceiver extends BroadcastReceiver {
         File file = new File(Environment.getExternalStorageDirectory(), "debug.txt");
 
         try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, false));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
             bufferedWriter.write(new Date().toString() + "\n" + "resultcode: " + getResultCode());
             bufferedWriter.newLine();
             bufferedWriter.write(str);

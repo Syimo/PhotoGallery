@@ -15,9 +15,15 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Environment;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -76,6 +82,22 @@ public class PollJobService extends JobService {
                 return;
             String lastId = QueryPreferences.getPrefLastId(getApplicationContext());
             String newId = list.get(0).getId();
+
+
+            File file = new File(Environment.getExternalStorageDirectory(), "hahah.txt");
+
+            try {
+                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
+                bufferedWriter.write(new Date().toString() + "\n" + " resultcode: " + lastId + "::::" + newId);
+                bufferedWriter.newLine();
+
+                bufferedWriter.write("-----------------------");
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
+                bufferedWriter.close();
+            } catch (IOException e) {
+                throw new RuntimeException("sssssssssssssssss");
+            }
             if (newId.equals(lastId)) {
                 Log.d(TAG, "不需要更新");
             } else {
