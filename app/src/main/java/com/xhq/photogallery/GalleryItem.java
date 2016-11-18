@@ -1,5 +1,7 @@
 package com.xhq.photogallery;
 
+import android.net.Uri;
+
 /**
  * Created by xhq on 2016/11/2.
  */
@@ -8,6 +10,7 @@ public class GalleryItem {
     private String id;
     private String title;
     private String url_s;
+    private String OwnerId;
 
     public String getId() {
         return id;
@@ -31,5 +34,26 @@ public class GalleryItem {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getOwnerId() {
+        return OwnerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        OwnerId = ownerId;
+    }
+
+    public Uri getPhotoPageUrl() {
+        return Uri.parse("https://www.flickr.com/photos/")
+                .buildUpon()
+                .appendPath(OwnerId)
+                .appendPath(id)
+                .build();
+    }
+
+    @Override
+    public String toString() {
+        return title;
     }
 }

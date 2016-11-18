@@ -84,7 +84,7 @@ public class PollJobService extends JobService {
             String newId = list.get(0).getId();
 
 
-            File file = new File(Environment.getExternalStorageDirectory(), "hahah.txt");
+            File file = new File(Environment.getExternalStorageDirectory(), "polljobservice.txt");
 
             try {
                 BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
@@ -142,7 +142,7 @@ public class PollJobService extends JobService {
         if (isSet) {
             JobScheduler js = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
             JobInfo jobInfo = new JobInfo.Builder(JOB_ID, new ComponentName(context, PollJobService.class))
-                    .setPeriodic(1000 * 60)
+                    .setPeriodic(1000 * 60 * 15)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                     .setPersisted(true)
                     .build();

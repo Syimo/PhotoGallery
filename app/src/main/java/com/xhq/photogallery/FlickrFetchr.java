@@ -111,6 +111,7 @@ public class FlickrFetchr {
             galleryItem.setId(item.getString("id"));
             galleryItem.setTitle(item.getString("title"));
             galleryItem.setUrl_s(item.getString("url_s"));
+            galleryItem.setOwnerId(item.getString("owner"));
             list.add(galleryItem);
         }
         return list;
