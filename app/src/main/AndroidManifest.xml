@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.xhq.photogallery">
-    <permission android:name="com.xhq.photogallery.PRIVATE" android:protectionLevel="signature"/>
+
+    <permission
+        android:name="com.xhq.photogallery.PRIVATE"
+        android:protectionLevel="signature"/>
+
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
@@ -22,6 +26,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name=".PhotoPageActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize">
+
+        </activity>
 
         <service android:name=".PollService"/>
         <service
@@ -36,7 +45,9 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
-        <receiver android:name=".NotificationReceiver" android:exported="false">
+        <receiver
+            android:name=".NotificationReceiver"
+            android:exported="false">
             <intent-filter android:priority="-999">
                 <action android:name="com.xhq.photogallery.SHOW_NOTIFICATION"/>
             </intent-filter>

@@ -131,7 +131,7 @@ public class PhotoGalleryFragment extends VisibleFragment {
     }
 
 
-    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private ImageView mImageView;
         private GalleryItem mItem;
 
@@ -147,12 +147,12 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
         @Override
         public void onClick(View v) {
-            Intent i = new Intent(Intent.ACTION_VIEW,mItem.getPhotoPageUrl());
 
+            Intent i = PhotoPageActivity.newIntent(getActivity(), mItem.getPhotoPageUrl());
             startActivity(i);
         }
 
-        public void bindGalleryItem(GalleryItem item){
+        public void bindGalleryItem(GalleryItem item) {
             mItem = item;
         }
     }
